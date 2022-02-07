@@ -152,7 +152,7 @@ mapview(pu_data, zcol = "cost")
 **Question**: What is the highest cost value?\
 **Answer**: The highest cost value is \$ `r round(max(pu_data$cost), 2)` in Australian dollars.\
 
-**Question**: Is there a spatial pattern in the planning unit cost values (hint: use `plot` to make a map)?\
+**Question**: Is there a spatial pattern in the planning unit cost values?\
 **Answer**: Yes, the planning units with the highest cost tend to be in the northern most central part of Tasmania, followed by the western half of the region.\
 
 ## Vegetation data
@@ -273,6 +273,7 @@ prop_df <- rownames_to_column(prop_df) %>%
 
 prop_highest <- prop_df %>% filter(proportion == max(proportion))
 ```
+
 **Answer**: The vegetation class that is most abundant is `r prop_highest[[1]]`.\
 
 
@@ -338,13 +339,13 @@ max(abundance_data$absolute_abundance_km2)
 abundance_data$feature[which.max(abundance_data$absolute_abundance_km2)]
 ```
 
-**Question**: What is the median abundance of the features (hint: `median`)?\
+**Question**: What is the median abundance of the features?\
 **Answer**: The median abundance from the abundance dataset is `r round(median(abundance_data$absolute_abundance_km2), 2)` $km^2$.\
 
 **Question**: What is the name of the feature with smallest abundance?\
 **Answer**: The feature with the smallest abundance is `r abundance_data$feature[which.min(abundance_data$absolute_abundance_km2)]`.\
 
-**Question**: How many features have a total abundance greater than 100 km^2 (hint: use `sum(abundance_data$absolute_abundance_km2 > set_units(threshold, km^2)` with the correct `threshold` value)?\
+**Question**: How many features have a total abundance greater than 100 km^2?\
 **Answer**: There are `r nrow(abundance_data %>% filter(absolute_abundance_km2 > set_units(100, km^2)))` features with a total abundance greater than 100 $km^2$.\
 
 ## Feature representation
@@ -372,17 +373,21 @@ repr_data$absolute_held_km2 <-
 print(repr_data)
 ```
 
-**Question**: What is the average proportion of the features held in protected areas (hint: use `mean(table$relative_held)` with the correct `table` name)?\
-**Answer**: \
+**Question**: What is the average proportion of the features held in protected areas?\
+**Answer**: The average proportion of the features held in protected areas is `r round(mean(repr_data$relative_held), 4)`.`\
 
-**Question**: If we set a target of 10% coverage by protected areas, how many features fail to meet this target (hint: use `sum(table$relative_held >= target_value)` with the correct `table` name)?\
-**Answer**: \
+**Question**: If we set a target of 10% coverage by protected areas, how many features fail to meet this target?\
+**Answer**: There are `r nrow(repr_data %>% filter(relative_held > 0.1))` features that fail to meet the target of 10% coverage by protected areas.\
 
 **Question**: If we set a target of 20% coverage by protected areas, how many features fail to meet this target?\
-**Answer**: \
+**Answer**: There are `r nrow(repr_data %>% filter(relative_held > 0.2))` features that fail to meet the target of 10% coverage by protected areas.\
 
-**Question**: Is there a relationship between the total abundance of a feature and how well it is represented by protected areas (hint: `plot(abundance_data$absolute_abundance ~ repr_data$relative_held)`)?\
-**Answer**: \
+**Question**: Is there a relationship between the total abundance of a feature and how well it is represented by protected areas?\
+```{r, out.width = "60%"}
+plot(abundance_data$absolute_abundance ~ repr_data$relative_held)
+```
+
+**Answer**: There does not appear to be a relationship between the total abundance of a feature and how well it is represented by protected areas.\
 
 
 # Spatial prioritizations
