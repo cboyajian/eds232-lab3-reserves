@@ -397,7 +397,9 @@ plot(abundance_data$absolute_abundance ~ repr_data$relative_held)
 ```{r, out.width = "65%"}
 # print planning unit data
 print(pu_data)
+```
 
+```{r}
 # make prioritization problem
 p1_rds <- file.path(dir_data, "p1.rds")
 if (!file.exists(p1_rds)){
@@ -419,13 +421,19 @@ s1 <- solve(p1)
 # print solution, the solution_1 column contains the solution values
 # indicating if a planning unit is (1) selected or (0) not
 print(s1)
+```
 
+```{r}
 # calculate number of planning units selected in the prioritization
 eval_n_summary(p1, s1[, "solution_1"])
+```
 
+```{r}
 # calculate total cost of the prioritization
 eval_cost_summary(p1, s1[, "solution_1"])
+```
 
+```{r}
 # plot solution
 # selected = green, not selected = grey
 spplot(s1, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s1",
@@ -433,12 +441,12 @@ spplot(s1, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s1",
 ```
 
 **Question**: How many planing units were selected in the prioritization? What proportion of planning units were selected in the prioritization?\
-**Answer**: \
+**Answer**: There were `r eval_n_summary(p1, s1[, "solution_1"])[[2]]` planning units selected in the prioritization. There are a total of `r length(s1$id)` planning units, this means that `r (eval_n_summary(p1, s1[, "solution_1"])[[2]] / length(s1$id)) * 100`% of the planning units were selected.\
 
 **Question**: Is there a pattern in the spatial distribution of the priority areas?\
-**Answer**: \
+**Answer**: The priority areas appear to be spread out fairly evenly throughout the region with no spatial pattern.\
 
-**Question**: Can you verify that all of the targets were met in the prioritization (hint: eval_featu`re_representation_summary(p1, s1[, "solution_1"])`)?\
+**Question**: Can you verify that all of the targets were met in the prioritization (hint: `eval_feature_representation_summary(p1, s1[, "solution_1"])`)?\
 **Answer**: \
 
 ## Adding complexity
@@ -469,7 +477,10 @@ print(p2)
 
 # solve problem
 s2 <- solve(p2)
+print(s2)
+```
 
+```{r, out.width = "65%"}
 # plot solution
 # selected = green, not selected = grey
 spplot(s2, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s2",
@@ -497,7 +508,10 @@ print(p3)
 
 # solve problem
 s3 <- solve(p3)
+print(s3)
+```
 
+```{r, out.width = "65%"}
 # plot solution
 # selected = green, not selected = grey
 spplot(s3, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s3",
@@ -511,7 +525,9 @@ Next, let's lock out highly degraded areas. Similar to before, this information 
 # TRUE = red, FALSE = grey
 spplot(pu_data, "locked_out", col.regions = c("grey80", "darkred"),
        main = "locked_out", colorkey = FALSE)
+```
 
+```{r}
 # make prioritization problem
 p4_rds <- file.path(dir_data, "p4.rds")
 if (!file.exists(p4_rds)){
@@ -525,15 +541,16 @@ if (!file.exists(p4_rds)){
   saveRDS(p4, p4_rds)
 }
 p4 <- readRDS(p4_rds)
-```
 
-```{r, out.width = "65%"}
 # print problem
 print(p4)
 
 # solve problem
 s4 <- solve(p4)
+print(s4)
+```
 
+```{r, out.width = "65%"}
 # plot solution
 # selected = green, not selected = grey
 spplot(s4, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s4",
@@ -548,7 +565,7 @@ assert_that(
 ```
 
 **Question**: What is the cost of the planning units selected in `s2`, `s3`, and `s4`?\
-**Answer**: \
+**Answer**: The cost of the planning units selected in `s2` is \$`r round(eval_cost_summary(p1, s2[, "solution_1"])[[2]], 2)`. The cost of the planning units selected in `s3` is \$`r round(eval_cost_summary(p1, s3[, "solution_1"])[[2]], 2)`. And the costs of the planning units selected in `s4` is \$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)`.\
 
 **Question**: How many planning units are in `s2`, `s3`, and `s4`?\
 **Answer**: \
