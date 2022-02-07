@@ -246,7 +246,7 @@ cellStats(veg_data[[1]], "min")
 cellStats(veg_data[[1]], "mean")
 ```
 
-**Question**: What part of the study area is the 13th vegetation class found in (hint: make a map)? For instance, is it in the south-eastern part of the study area?\
+**Question**: What part of the study area is the 13th vegetation class found in? For instance, is it in the south-eastern part of the study area?\
 **Answer**: The 13th vegetation class is found in the eastern part of the studio area with the most density in the north-eastern part of the study area.\
 ```{r, out.width = "60%"}
 # plot a map of the 13th vegetation class
@@ -446,8 +446,8 @@ spplot(s1, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s1",
 **Question**: Is there a pattern in the spatial distribution of the priority areas?\
 **Answer**: The priority areas appear to be spread out fairly evenly throughout the region with no spatial pattern.\
 
-**Question**: Can you verify that all of the targets were met in the prioritization (hint: `eval_feature_representation_summary(p1, s1[, "solution_1"])`)?\
-**Answer**: \
+**Question**: Can you verify that all of the targets were met in the prioritization?\
+**Answer**: Yes, the lowest value in `s1` for column `relative_held` is `r round(min(eval_feature_representation_summary(p1, s1[, "solution_1"])[5]), 4)`. This is above 5%, meaning that all of the targets were met in the prioritization.\
 
 ## Adding complexity
 
@@ -557,34 +557,27 @@ spplot(s4, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s4",
        colorkey = FALSE)
 ```
 
-```{r, include=FALSE}
-assert_that(
-  !identical(s3$solution_1, s4$solution_1),
-  eval_cost_summary(p3, s3[, "solution_1"])$cost <
-    eval_cost_summary(p4, s4[, "solution_1"])$cost)
-```
-
 **Question**: What is the cost of the planning units selected in `s2`, `s3`, and `s4`?\
 **Answer**: The cost of the planning units selected in `s2` is \$`r round(eval_cost_summary(p1, s2[, "solution_1"])[[2]], 2)`. The cost of the planning units selected in `s3` is \$`r round(eval_cost_summary(p1, s3[, "solution_1"])[[2]], 2)`. And the costs of the planning units selected in `s4` is \$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)`.\
 
 **Question**: How many planning units are in `s2`, `s3`, and `s4`?\
-**Answer**: \
+**Answer**: There are `r round(eval_n_summary(p1, s2[, "solution_1"])[[2]], 2)` planning units in `s2`, `r round(eval_n_summary(p1, s3[, "solution_1"])[[2]], 2)` planning units in `s3`, and `r round(eval_n_summary(p1, s4[, "solution_1"])[[2]], 2)` planning units in `s4`.\
 
 **Question**: Do the solutions with more planning units have a greater cost? Why (or why not)?\
-**Answer**: \
+**Answer**: Yes, the solutions with more planning units have a greater costs. This makes sense because the solution cost is a sum of the cost for each planning unit, so more units will likely result in a higher costs.\
 
 **Question**: Why does the first solution (`s1`) cost less than the second solution with protected areas locked into the solution (`s2`)?\
-**Answer**: \
+**Answer**: The first solution costs less than the second solution because there are fewer planning units included in the first solutions. This is because the second solution includes the additional constraint of including all planning units that are already covered by a protected area (i.e. "locked-in").\
 
 **Question**: Why does the third solution (`s3`) cost less than the fourth solution solution with highly degraded areas locked out (`s4`)?\
-**Answer**: \
+**Answer**: The third solution costs less than the fourth solution because for the forth solution we have added a second constraint of excluding all "degraded" (i.e. "locked-out) planning units. The costs of the degraded units is likely lower than the costs of non-degraded units, so it makes sense that the overall cost of the solution would be higher when we force the solution to exlude these units.\
 
 ## Penalizing fragmentation
 
 ```{r, out.width = "65%"}
 # make prioritization problem
 p5_rds <- file.path(dir_data, "p5.rds")
-if (!file.exists(p5_rds)){
+if (!file.exists(p5_rds) | TRUE){
   p5 <- problem(pu_data, veg_data, cost_column = "cost") %>%
     add_min_set_objective() %>%
     add_boundary_penalties(penalty = 0.001) %>%
@@ -613,21 +606,67 @@ spplot(s5, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s5",
        colorkey = FALSE)
 ```
 
-```{r, include=FALSE}
-assert_that(
-  !identical(s5$solution_1, s4$solution_1),
-  eval_cost_summary(p4, s4[, "solution_1"])$cost <
-    eval_cost_summary(p5, s5[, "solution_1"])$cost)
+**Question**: What is the cost the fourth (`s4`) and fifth (`s5`) solutions? Why does the fifth solution (`s5`) cost more than the fourth (`s4`) solution?\
+**Answer**: The cost of the planning units selected in `s4` is \$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)` and the cost of the planning units selected in `s5` is \$`r round(eval_cost_summary(p1, s5[, "solution_1"])[[2]], 2)`. The fifth solution costs more than the fourth solutions because we have added yet another constraint (pick planning units that are more clustered together), which forces the solution to pick planning units with a higher cost than solution 4.\
+
+**Question**: Try setting the penalty value to 0.000000001 (i.e. 1e-9) instead of 0.001. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this a useful penalty value? Why (or why not)?\
+```{r, out.width = "65%"}
+# make prioritization problem
+p5_rds <- file.path(dir_data, "p5.rds")
+if (!file.exists(p5_rds) | TRUE){
+  p5 <- problem(pu_data, veg_data, cost_column = "cost") %>%
+    add_min_set_objective() %>%
+    add_boundary_penalties(penalty = 0.000000001) %>%
+    add_relative_targets(0.1) %>%
+    add_locked_in_constraints("locked_in") %>%
+    add_locked_out_constraints("locked_out") %>%
+    add_binary_decisions() %>%
+    add_lpsymphony_solver()
+  saveRDS(p5, p5_rds)
+}
+p5 <- readRDS(p5_rds)
+
+# solve problem,
+# note this will take a bit longer than the previous runs
+s5 <- solve(p5)
+
+# plot solution
+# selected = green, not selected = grey
+spplot(s5, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s5",
+       colorkey = FALSE)
 ```
 
-**Question**: What is the cost the fourth (`s4`) and fifth (`s5`) solutions? Why does the fifth solution (`s5`) cost more than the fourth (`s4`) solution?\
-**Answer**: \
+**Answer**: The cost of the new penalty solution is \$`r round(eval_cost_summary(p1, s5[, "solution_1"])[[2]], 2)`, which is very close to to the cost of the fourth solution (\$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)`). When plotted the maps also look similar (with slight differences). Because this solution is so similar to `s4`, I do not think this is a helpful penalty value.\
 
-**Question**: Try setting the penalty value to 0.000000001 (i.e. 1e-9) instead of 0.001. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this is a useful penalty value? Why (or why not)?\
-**Answer**: \
 
-**Question**: \
-**Answer**: Try setting the penalty value to 0.5. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this a useful penalty value? Why (or why not)?\
+**Question**: Try setting the penalty value to 0.5. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this a useful penalty value? Why (or why not)?\
+```{r, out.width = "65%"}
+# make prioritization problem
+p5_rds <- file.path(dir_data, "p5.rds")
+if (!file.exists(p5_rds) | TRUE){
+  p5 <- problem(pu_data, veg_data, cost_column = "cost") %>%
+    add_min_set_objective() %>%
+    add_boundary_penalties(penalty = 0.5) %>%
+    add_relative_targets(0.1) %>%
+    add_locked_in_constraints("locked_in") %>%
+    add_locked_out_constraints("locked_out") %>%
+    add_binary_decisions() %>%
+    add_lpsymphony_solver()
+  saveRDS(p5, p5_rds)
+}
+p5 <- readRDS(p5_rds)
+
+# solve problem,
+# note this will take a bit longer than the previous runs
+s5 <- solve(p5)
+
+# plot solution
+# selected = green, not selected = grey
+spplot(s5, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s5",
+       colorkey = FALSE)
+```
+
+**Answer**: The cost of the new penalty solution is \$`r round(eval_cost_summary(p1, s5[, "solution_1"])[[2]], 2)`, which is higher then the cost of `s4` solution (\$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)`). This is also not a useful penalty value because it forces all planning units to be clustered together, which is probably more clustering than is actually necessary and therefore a more costly solution than we would like.\
 
 
 
