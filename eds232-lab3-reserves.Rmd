@@ -30,8 +30,6 @@ if (!require("lpsymphony")){
 }
 
 options(scipen = 999)
-
-redo <- FALSE
 ```
 
 Data setup
@@ -43,7 +41,7 @@ pu_zip   <- file.path(dir_data, basename(pu_url))
 vegetation_tif <- file.path(dir_data, "vegetation.tif")
 
 dir.create(dir_data, showWarnings = F, recursive = T)
-if (!file.exists(pu_shp) | redo){
+if (!file.exists(pu_shp)){
   download.file(pu_url, pu_zip)
   unzip(pu_zip, exdir = dir_data)
   dir_unzip   <- file.path(dir_data, "data")
@@ -146,13 +144,13 @@ spplot(pu_data, "cost")
 mapview(pu_data, zcol = "cost")
 ```
 
-**Question**: How many planning units are in the planning unit data?\
+**Question 1**: How many planning units are in the planning unit data?\
 **Answer**: There are `r nrow(pu_data)` planning units in the unit data.\
 
-**Question**: What is the highest cost value?\
+**Question 2**: What is the highest cost value?\
 **Answer**: The highest cost value is \$ `r round(max(pu_data$cost), 2)` in Australian dollars.\
 
-**Question**: Is there a spatial pattern in the planning unit cost values?\
+**Question 3**: Is there a spatial pattern in the planning unit cost values?\
 **Answer**: Yes, the planning units with the highest cost tend to be in the northern most central part of Tasmania, followed by the western half of the region.\
 
 ## Vegetation data
@@ -246,20 +244,20 @@ cellStats(veg_data[[1]], "min")
 cellStats(veg_data[[1]], "mean")
 ```
 
-**Question**: What part of the study area is the 13th vegetation class found in? For instance, is it in the south-eastern part of the study area?\
+**Question 4**: What part of the study area is the 13th vegetation class found in? For instance, is it in the south-eastern part of the study area?\
 **Answer**: The 13th vegetation class is found in the eastern part of the studio area with the most density in the north-eastern part of the study area.\
 ```{r, out.width = "60%"}
 # plot a map of the 13th vegetation class
 plot(veg_data[[13]])
 ```
 
-**Question**: What proportion of cells contain the 12th vegetation class?\
+**Question 5**: What proportion of cells contain the 12th vegetation class?\
 ```{r}
 veg_data_freq12 <- freq(veg_data[[12]])
 ```
 **Answer**: Of the total cells in the raster (`r ncell(veg_data[[12]])`), `r veg_data_freq12[[2, 2]]` cells contain the 12th vegetation class, making the proportion of the cells that contain the vegetation class `r round(veg_data_freq12[[2, 2]] / ncell(veg_data[[12]]), 4) * 100`%.\
 
-**Question**: Which vegetation class is the most abundant (i.e. present in the greatest number of cells)?\
+**Question 6**: Which vegetation class is the most abundant (i.e. present in the greatest number of cells)?\
 ```{r}
 prop_df <- data.frame()
 
@@ -339,13 +337,13 @@ max(abundance_data$absolute_abundance_km2)
 abundance_data$feature[which.max(abundance_data$absolute_abundance_km2)]
 ```
 
-**Question**: What is the median abundance of the features?\
+**Question 7**: What is the median abundance of the features?\
 **Answer**: The median abundance from the abundance dataset is `r round(median(abundance_data$absolute_abundance_km2), 2)` $km^2$.\
 
-**Question**: What is the name of the feature with smallest abundance?\
+**Question 8**: What is the name of the feature with smallest abundance?\
 **Answer**: The feature with the smallest abundance is `r abundance_data$feature[which.min(abundance_data$absolute_abundance_km2)]`.\
 
-**Question**: How many features have a total abundance greater than 100 km^2?\
+**Question 9**: How many features have a total abundance greater than 100 km^2?\
 **Answer**: There are `r nrow(abundance_data %>% filter(absolute_abundance_km2 > set_units(100, km^2)))` features with a total abundance greater than 100 $km^2$.\
 
 ## Feature representation
@@ -373,16 +371,16 @@ repr_data$absolute_held_km2 <-
 print(repr_data)
 ```
 
-**Question**: What is the average proportion of the features held in protected areas?\
+**Question 10**: What is the average proportion of the features held in protected areas?\
 **Answer**: The average proportion of the features held in protected areas is `r round(mean(repr_data$relative_held), 4)`.`\
 
-**Question**: If we set a target of 10% coverage by protected areas, how many features fail to meet this target?\
-**Answer**: There are `r nrow(repr_data %>% filter(relative_held > 0.1))` features that fail to meet the target of 10% coverage by protected areas.\
+**Question 11**: If we set a target of 10% coverage by protected areas, how many features fail to meet this target?\
+**Answer**: There are `r nrow(repr_data %>% filter(relative_held < 0.1))` features that fail to meet the target of 10% coverage by protected areas.\
 
-**Question**: If we set a target of 20% coverage by protected areas, how many features fail to meet this target?\
+**Question 12**: If we set a target of 20% coverage by protected areas, how many features fail to meet this target?\
 **Answer**: There are `r nrow(repr_data %>% filter(relative_held > 0.2))` features that fail to meet the target of 10% coverage by protected areas.\
 
-**Question**: Is there a relationship between the total abundance of a feature and how well it is represented by protected areas?\
+**Question 13**: Is there a relationship between the total abundance of a feature and how well it is represented by protected areas?\
 ```{r, out.width = "60%"}
 plot(abundance_data$absolute_abundance ~ repr_data$relative_held)
 ```
@@ -440,13 +438,13 @@ spplot(s1, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s1",
        colorkey = FALSE)
 ```
 
-**Question**: How many planing units were selected in the prioritization? What proportion of planning units were selected in the prioritization?\
+**Question 14**: How many planing units were selected in the prioritization? What proportion of planning units were selected in the prioritization?\
 **Answer**: There were `r eval_n_summary(p1, s1[, "solution_1"])[[2]]` planning units selected in the prioritization. There are a total of `r length(s1$id)` planning units, this means that `r (eval_n_summary(p1, s1[, "solution_1"])[[2]] / length(s1$id)) * 100`% of the planning units were selected.\
 
-**Question**: Is there a pattern in the spatial distribution of the priority areas?\
+**Question 15 **: Is there a pattern in the spatial distribution of the priority areas?\
 **Answer**: The priority areas appear to be spread out fairly evenly throughout the region with no spatial pattern.\
 
-**Question**: Can you verify that all of the targets were met in the prioritization?\
+**Question 16**: Can you verify that all of the targets were met in the prioritization?\
 **Answer**: Yes, the lowest value in `s1` for column `relative_held` is `r round(min(eval_feature_representation_summary(p1, s1[, "solution_1"])[5]), 4)`. This is above 5%, meaning that all of the targets were met in the prioritization.\
 
 ## Adding complexity
@@ -557,19 +555,19 @@ spplot(s4, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s4",
        colorkey = FALSE)
 ```
 
-**Question**: What is the cost of the planning units selected in `s2`, `s3`, and `s4`?\
+**Question 17**: What is the cost of the planning units selected in `s2`, `s3`, and `s4`?\
 **Answer**: The cost of the planning units selected in `s2` is \$`r round(eval_cost_summary(p1, s2[, "solution_1"])[[2]], 2)`. The cost of the planning units selected in `s3` is \$`r round(eval_cost_summary(p1, s3[, "solution_1"])[[2]], 2)`. And the costs of the planning units selected in `s4` is \$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)`.\
 
-**Question**: How many planning units are in `s2`, `s3`, and `s4`?\
+**Question 18**: How many planning units are in `s2`, `s3`, and `s4`?\
 **Answer**: There are `r round(eval_n_summary(p1, s2[, "solution_1"])[[2]], 2)` planning units in `s2`, `r round(eval_n_summary(p1, s3[, "solution_1"])[[2]], 2)` planning units in `s3`, and `r round(eval_n_summary(p1, s4[, "solution_1"])[[2]], 2)` planning units in `s4`.\
 
-**Question**: Do the solutions with more planning units have a greater cost? Why (or why not)?\
+**Question 19**: Do the solutions with more planning units have a greater cost? Why (or why not)?\
 **Answer**: Yes, the solutions with more planning units have a greater costs. This makes sense because the solution cost is a sum of the cost for each planning unit, so more units will likely result in a higher costs.\
 
-**Question**: Why does the first solution (`s1`) cost less than the second solution with protected areas locked into the solution (`s2`)?\
+**Question 20**: Why does the first solution (`s1`) cost less than the second solution with protected areas locked into the solution (`s2`)?\
 **Answer**: The first solution costs less than the second solution because there are fewer planning units included in the first solutions. This is because the second solution includes the additional constraint of including all planning units that are already covered by a protected area (i.e. "locked-in").\
 
-**Question**: Why does the third solution (`s3`) cost less than the fourth solution solution with highly degraded areas locked out (`s4`)?\
+**Question 21**: Why does the third solution (`s3`) cost less than the fourth solution solution with highly degraded areas locked out (`s4`)?\
 **Answer**: The third solution costs less than the fourth solution because for the forth solution we have added a second constraint of excluding all "degraded" (i.e. "locked-out) planning units. The costs of the degraded units is likely lower than the costs of non-degraded units, so it makes sense that the overall cost of the solution would be higher when we force the solution to exlude these units.\
 
 ## Penalizing fragmentation
@@ -606,10 +604,10 @@ spplot(s5, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s5",
        colorkey = FALSE)
 ```
 
-**Question**: What is the cost the fourth (`s4`) and fifth (`s5`) solutions? Why does the fifth solution (`s5`) cost more than the fourth (`s4`) solution?\
+**Question 22**: What is the cost the fourth (`s4`) and fifth (`s5`) solutions? Why does the fifth solution (`s5`) cost more than the fourth (`s4`) solution?\
 **Answer**: The cost of the planning units selected in `s4` is \$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)` and the cost of the planning units selected in `s5` is \$`r round(eval_cost_summary(p1, s5[, "solution_1"])[[2]], 2)`. The fifth solution costs more than the fourth solutions because we have added yet another constraint (pick planning units that are more clustered together), which forces the solution to pick planning units with a higher cost than solution 4.\
 
-**Question**: Try setting the penalty value to 0.000000001 (i.e. 1e-9) instead of 0.001. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this a useful penalty value? Why (or why not)?\
+**Question 23**: Try setting the penalty value to 0.000000001 (i.e. 1e-9) instead of 0.001. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this a useful penalty value? Why (or why not)?\
 ```{r, out.width = "65%"}
 # make prioritization problem
 p5_rds <- file.path(dir_data, "p5.rds")
@@ -639,7 +637,7 @@ spplot(s5, "solution_1", col.regions = c("grey80", "darkgreen"), main = "s5",
 **Answer**: The cost of the new penalty solution is \$`r round(eval_cost_summary(p1, s5[, "solution_1"])[[2]], 2)`, which is very close to to the cost of the fourth solution (\$`r round(eval_cost_summary(p1, s4[, "solution_1"])[[2]], 2)`). When plotted the maps also look similar (with slight differences). Because this solution is so similar to `s4`, I do not think this is a helpful penalty value.\
 
 
-**Question**: Try setting the penalty value to 0.5. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this a useful penalty value? Why (or why not)?\
+**Question 24**: Try setting the penalty value to 0.5. What is the cost of the solution now? Is it different from the fourth solution (`s4`) (hint: try plotting the solutions to visualize them)? Is this a useful penalty value? Why (or why not)?\
 ```{r, out.width = "65%"}
 # make prioritization problem
 p5_rds <- file.path(dir_data, "p5.rds")
